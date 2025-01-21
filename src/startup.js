@@ -176,6 +176,8 @@ async function pushItemTORedis(context) {
     "product.isDeleted": { $ne: true },
     "product.isSoldOut": { $ne: true },
     "product.isVisible": true,
+    "product.pricing.USD.minPrice": { $ne: null },
+    "product.pricing.USD.maxPrice": { $ne: null }
   };
 
   const catalogItems = await Catalog.find(query).sort({ "product.createdAt": -1 }).toArray();

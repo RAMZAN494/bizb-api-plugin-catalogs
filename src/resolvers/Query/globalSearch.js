@@ -14,7 +14,7 @@ export default async function globalSearch(_, args, context, info) {
     },
     {
       "$match": {
-        "product.isDeleted": false,
+        "product.isDeleted": false,   
         "product.isVisible": true,
         "product.isSoldOut": false
       }

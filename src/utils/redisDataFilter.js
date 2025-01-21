@@ -1,8 +1,13 @@
 // catalogFilters.js
 
 export const filterBySearchQuery = (nodes, searchQuery) => {
+    const regex = new RegExp(searchQuery, 'i'); // 'i' for case-insensitive matching
+
     return nodes.filter(node =>
-        node.product && typeof node.product.title === 'string' && node.product.title.includes(searchQuery)
+        (node.product && 
+            ((typeof node.product.title === 'string' && regex.test(node.product.title)) ||
+            (typeof node.product.description === 'string' && regex.test(node.product.description)))) ||
+        (typeof node.slug === 'string' && regex.test(node.slug))
     );
 };
 
