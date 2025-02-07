@@ -33,7 +33,9 @@ export default async function publishProducts(context, productIds) {
     // TODO(pod-auth): create helper to handle multiple permissions checks for multiple items
     for (const product of products) {
       // eslint-disable-next-line no-await-in-loop
-      await context.validatePermissions(
+
+      const internalContext = context.getInternalContext();
+      await internalContext.validatePermissions(
         `reaction:legacy:products:${product._id}`,
         "publish",
         { shopId }
