@@ -11,7 +11,7 @@ import cron from 'node-cron';
  * @returns {undefined}
  */
 export default async function catalogStartup(context) {
-  pushItemTORedis(context)
+  // pushItemTORedis(context)
 
 
 
@@ -154,48 +154,48 @@ export default async function catalogStartup(context) {
 }
 
 
-async function pushItemTORedis(context) {
-  if (!context || !context.redis) {
-    console.error("Redis client is not available in the context.");
-    return;
-  }
-  const { collections, redis } = context;
-  const { Catalog } = collections;
+// async function pushItemTORedis(context) {
+//   if (!context || !context.redis) {
+//     console.error("Redis client is not available in the context.");
+//     return;
+//   }
+//   const { collections, redis } = context;
+//   const { Catalog } = collections;
 
-  const redisKey = 'catalogItems';
-  const flagKey = 'IsRedisData';
+//   const redisKey = 'catalogItems';
+//   const flagKey = 'IsRedisData';
 
-  // Check if the flag 'IsRedisData' is set to true in Redis.
-  const isDataAlreadySet = await redis.get(flagKey);
-  if (isDataAlreadySet === 'true') {
-    console.log("Redis data is already set, skipping update.");
-    return;
-  }
+//   // Check if the flag 'IsRedisData' is set to true in Redis.
+//   const isDataAlreadySet = await redis.get(flagKey);
+//   if (isDataAlreadySet === 'true') {
+//     console.log("Redis data is already set, skipping update.");
+//     return;
+//   }
 
-  let query = {
-    "product.isDeleted": { $ne: true },
-    "product.isSoldOut": { $ne: true },
-    "product.isVisible": true,
-    "product.pricing.USD.minPrice": { $ne: null },
-    "product.pricing.USD.maxPrice": { $ne: null }
-  };
+//   let query = {
+//     "product.isDeleted": { $ne: true },
+//     "product.isSoldOut": { $ne: true },
+//     "product.isVisible": true,
+//     "product.pricing.USD.minPrice": { $ne: null },
+//     "product.pricing.USD.maxPrice": { $ne: null }
+//   };
 
-  const catalogItems = await Catalog.find(query).sort({ "product.createdAt": -1 }).toArray();
-  const totalCount = await Catalog.countDocuments(query);
+//   const catalogItems = await Catalog.find(query).sort({ "product.createdAt": -1 }).toArray();
+//   const totalCount = await Catalog.countDocuments(query);
 
-  const catalogData = {
-    nodes: catalogItems,
-    totalCount: totalCount,
-  };
+//   const catalogData = {
+//     nodes: catalogItems,
+//     totalCount: totalCount,
+//   };
 
-  // Store catalog data to Redis and set the expiration.
-  await redis.set(redisKey, JSON.stringify(catalogData), "EX", 604800);
+//   // Store catalog data to Redis and set the expiration.
+//   await redis.set(redisKey, JSON.stringify(catalogData), "EX", 604800);
 
-  // Set the flag 'IsRedisData' to true after successfully setting the catalog data.
-  await redis.set(flagKey, 'true', "EX", 604800);
+//   // Set the flag 'IsRedisData' to true after successfully setting the catalog data.
+//   await redis.set(flagKey, 'true', "EX", 604800);
 
-  console.log("Redis data has been updated successfully.");
-}
+//   console.log("Redis data has been updated successfully.");
+// }
 
 
 

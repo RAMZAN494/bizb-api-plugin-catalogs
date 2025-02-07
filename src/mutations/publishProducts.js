@@ -53,70 +53,70 @@ export default async function publishProducts(context, productIds) {
   }
   const catalogProduct = await Catalog.find({ "product.productId": { $in: productIds } }).toArray();
 
-  invalidateAndUpdateCache(redis, catalogProduct)
+  // invalidateAndUpdateCache(redis, catalogProduct)
 
   return catalogProduct
 }
 
 
 
-async function invalidateAndUpdateCache(redis, products) {
-  const redisKey = 'catalogItems';  // Exact key without wildcard.
-  // console.log("Looking for products: ", products);
+// async function invalidateAndUpdateCache(redis, products) {
+//   const redisKey = 'catalogItems';  // Exact key without wildcard.
+//   // console.log("Looking for products: ", products);
 
-  // Assuming 'catalogItems' is a key for a serialized object or a list.
-  const cachedObjectSerialized = await redis.get(redisKey);
-  if (!cachedObjectSerialized) {
-    console.log("No cached data found under key:", redisKey);
-    return;
-  }
+//   // Assuming 'catalogItems' is a key for a serialized object or a list.
+//   const cachedObjectSerialized = await redis.get(redisKey);
+//   if (!cachedObjectSerialized) {
+//     console.log("No cached data found under key:", redisKey);
+//     return;
+//   }
 
 
-  let cachedObject = JSON.parse(cachedObjectSerialized);
-  // console.log("cachedObject serialized", cachedObject);
-  let nodes = cachedObject.nodes;
-  let updates = [];
-  let unmatchedProducts = [...products];
+//   let cachedObject = JSON.parse(cachedObjectSerialized);
+//   // console.log("cachedObject serialized", cachedObject);
+//   let nodes = cachedObject.nodes;
+//   let updates = [];
+//   let unmatchedProducts = [...products];
 
-  for (let index = 0; index < nodes.length; index++) {
-    const node = nodes[index];
-    if (!node.product) continue;
+//   for (let index = 0; index < nodes.length; index++) {
+//     const node = nodes[index];
+//     if (!node.product) continue;
 
-    const productIndex = unmatchedProducts.findIndex(p => p.product && p.product._id === node.product._id);
-    if (productIndex === -1) {
-      // console.log(No matching product found or product is undefined for ID: ${node.product._id});
-      continue;
-    }
+//     const productIndex = unmatchedProducts.findIndex(p => p.product && p.product._id === node.product._id);
+//     if (productIndex === -1) {
+//       // console.log(No matching product found or product is undefined for ID: ${node.product._id});
+//       continue;
+//     }
 
-    // Remove the matched product from unmatchedProducts list.
-    const [matchedProduct] = unmatchedProducts.splice(productIndex, 1);
-    const { product } = matchedProduct;
+//     // Remove the matched product from unmatchedProducts list.
+//     const [matchedProduct] = unmatchedProducts.splice(productIndex, 1);
+//     const { product } = matchedProduct;
 
-    if (product.isDeleted || !product.isVisible || product.isSoldOut) {
-      // console.log(Removing product ${product._id} from Redis because it is either deleted or not visible.);
-      nodes.splice(index--, 1);
-    } else {
-      // console.log(Updating product ${product._id} in Redis.);
-      nodes[index].product = { ...node.product, ...product };
-    }
-    // updates.push(redis.set(redisKey, JSON.stringify(cachedObject), "EX", 604800));
-  }
+//     if (product.isDeleted || !product.isVisible || product.isSoldOut) {
+//       // console.log(Removing product ${product._id} from Redis because it is either deleted or not visible.);
+//       nodes.splice(index--, 1);
+//     } else {
+//       // console.log(Updating product ${product._id} in Redis.);
+//       nodes[index].product = { ...node.product, ...product };
+//     }
+//     // updates.push(redis.set(redisKey, JSON.stringify(cachedObject), "EX", 604800));
+//   }
 
-  // Insert unmatched products at the beginning of the Redis list.
-  for (const unmatchedProduct of unmatchedProducts) {
-    nodes.unshift(unmatchedProduct)
+//   // Insert unmatched products at the beginning of the Redis list.
+//   for (const unmatchedProduct of unmatchedProducts) {
+//     nodes.unshift(unmatchedProduct)
 
-  }
-  cachedObject.nodes = nodes;
-  updates.push(redis.set(redisKey, JSON.stringify(cachedObject), "EX", 604800));
+//   }
+//   cachedObject.nodes = nodes;
+//   updates.push(redis.set(redisKey, JSON.stringify(cachedObject), "EX", 604800));
 
-  if (!updates.length) {
-    Logger.error("No products matched in Redis cache or no updates necessary.");
-    throw new ReactionError(
-      "server-error",
-      "No products matched in Redis cache or no updates necessary"
-    );
-  }
+//   if (!updates.length) {
+//     Logger.error("No products matched in Redis cache or no updates necessary.");
+//     throw new ReactionError(
+//       "server-error",
+//       "No products matched in Redis cache or no updates necessary"
+//     );
+//   }
 
-  return;
-}
+//   return;
+// }
